@@ -3,7 +3,7 @@
 #
 # See LICENSE file for full license.
 
-from . import AWSObject, Ref
+from . import AWSObject, AWSHelperFn, Ref
 from .validators import integer
 
 
@@ -31,3 +31,10 @@ class WaitConditionHandle(AWSObject):
     type = "AWS::CloudFormation::WaitConditionHandle"
 
     props = {}
+
+class Init(AWSHelperFn):
+    def __init__(self, data):
+        self.data = { "AWS::CloudFormation::Init" : data}
+
+    def JSONrepr(self):
+        return self.data

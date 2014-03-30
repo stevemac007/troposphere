@@ -32,9 +32,10 @@ class WaitConditionHandle(AWSObject):
 
     props = {}
 
+
 class Init(AWSHelperFn):
     def __init__(self, data):
-        self.data = { "AWS::CloudFormation::Init" : data}
+        self.data = {"AWS::CloudFormation::Init": data}
 
     def JSONrepr(self):
         return self.data

@@ -4,17 +4,18 @@
 # See LICENSE file for full license.
 
 from . import AWSHelperFn, AWSObject, AWSProperty
-from .validators import boolean
+from .validators import boolean, network_port, positive_integer
 
 
 class DBInstance(AWSObject):
     type = "AWS::RDS::DBInstance"
 
     props = {
-        'AllocatedStorage': (basestring, True),
+        'AllocatedStorage': (positive_integer, True),
+        'AllowMajorVersionUpgrade': (boolean, False),
         'AutoMinorVersionUpgrade': (boolean, False),
         'AvailabilityZone': (basestring, False),
-        'BackupRetentionPeriod': (basestring, False),
+        'BackupRetentionPeriod': (positive_integer, False),
         'DBInstanceClass': (basestring, True),
         'DBInstanceIdentifier': (basestring, False),
         'DBName': (basestring, False),
@@ -26,16 +27,28 @@ class DBInstance(AWSObject):
         'EngineVersion': (basestring, False),
         'Iops': (int, False),
         'LicenseModel': (basestring, False),
-        'MasterUsername': (basestring, True),
-        'MasterUserPassword': (basestring, True),
+        'MasterUsername': (basestring, False),
+        'MasterUserPassword': (basestring, False),
         'MultiAZ': (boolean, False),
-        'Port': (basestring, False),
+        'Port': (network_port, False),
         'PreferredBackupWindow': (basestring, False),
         'PreferredMaintenanceWindow': (basestring, False),
         'SourceDBInstanceIdentifier': (basestring, False),
         'Tags': (list, False),
         'VPCSecurityGroups': ([basestring, AWSHelperFn], False),
     }
+
+    def validate(self):
+        if 'DBSnapshotIdentifier' not in self.properties and \
+            ('MasterUsername' not in self.properties or
+             'MasterUserPassword' not in self.properties):
+            raise ValueError(
+                'Either (MasterUsername and MasterUserPassword) or'
+                ' DBSnapshotIdentifier are required in type '
+                'AWS::RDS::DBInstance.'
+            )
+
+        return True
 
 
 class DBParameterGroup(AWSObject):

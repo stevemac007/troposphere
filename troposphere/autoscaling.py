@@ -3,8 +3,9 @@
 #
 # See LICENSE file for full license.
 
-from . import AWSHelperFn, AWSObject, AWSProperty
-from .validators import boolean, integer, positive_integer
+from . import AWSHelperFn, AWSObject, AWSProperty, Ref
+from .validators import boolean, integer
+from . import cloudformation
 
 
 EC2_INSTANCE_LAUNCH = "autoscaling:EC2_INSTANCE_LAUNCH"
@@ -12,6 +13,13 @@ EC2_INSTANCE_LAUNCH_ERROR = "autoscaling:EC2_INSTANCE_LAUNCH_ERROR"
 EC2_INSTANCE_TERMINATE = "autoscaling:EC2_INSTANCE_TERMINATE"
 EC2_INSTANCE_TERMINATE_ERROR = "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"
 TEST_NOTIFICATION = "autoscaling:TEST_NOTIFICATION"
+
+# Termination Policy constants
+Default = 'Default'
+OldestInstance = 'OldestInstance'
+NewestInstance = 'NewestInstance'
+OldestLaunchConfiguration = 'OldestLaunchConfiguration'
+ClosestToNextInstanceHour = 'ClosestToNextInstanceHour'
 
 
 class Tag(AWSHelperFn):
@@ -33,6 +41,13 @@ class NotificationConfiguration(AWSProperty):
     }
 
 
+class MetricsCollection(AWSProperty):
+    props = {
+        'Granularity': (basestring, True),
+        'Metrics': (list, False),
+    }
+
+
 class AutoScalingGroup(AWSObject):
     type = "AWS::AutoScaling::AutoScalingGroup"
 
@@ -45,21 +60,32 @@ class AutoScalingGroup(AWSObject):
         'InstanceId': (basestring, False),
         'LaunchConfigurationName': (basestring, True),
         'LoadBalancerNames': (list, False),
-        'MaxSize': (positive_integer, True),
-        'MinSize': (positive_integer, True),
+        'MaxSize': (integer, True),
+        'MetricsCollection': ([MetricsCollection], False),
+        'MinSize': (integer, True),
         'NotificationConfiguration': (NotificationConfiguration, False),
+        'PlacementGroup': (basestring, False),
         'Tags': (list, False),  # Although docs say these are required
+        'TerminationPolicies': ([basestring], False),
         'VPCZoneIdentifier': (list, False),
     }
 
     def validate(self):
         if 'UpdatePolicy' in self.resource:
             update_policy = self.resource['UpdatePolicy']
-            if int(update_policy.MinInstancesInService) >= int(self.MaxSize):
-                raise ValueError(
-                    "The UpdatePolicy attribute "
-                    "MinInstancesInService must be less than the "
-                    "autoscaling group's MaxSize")
+
+            isMinRef = isinstance(update_policy.MinInstancesInService, Ref)
+            isMaxRef = isinstance(self.MaxSize, Ref)
+
+            if not (isMinRef or isMaxRef):
+                minCount = int(update_policy.MinInstancesInService)
+                maxCount = int(self.MaxSize)
+
+                if minCount >= maxCount:
+                    raise ValueError(
+                        "The UpdatePolicy attribute "
+                        "MinInstancesInService must be less than the "
+                        "autoscaling group's MaxSize")
         return True
 
 
@@ -77,6 +103,7 @@ class LaunchConfiguration(AWSObject):
         'InstanceType': (basestring, True),
         'KernelId': (basestring, False),
         'KeyName': (basestring, False),
+        'Metadata': (cloudformation.Init, False),
         'RamDiskId': (basestring, False),
         'SecurityGroups': (list, False),
         'SpotPrice': (basestring, False),
@@ -129,15 +156,21 @@ class Trigger(AWSObject):
 
 
 class EBSBlockDevice(AWSProperty):
+    # http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-as-launchconfig-blockdev-template.html
     props = {
+        'DeleteOnTermination': (boolean, False),
+        'Iops': (integer, False),
         'SnapshotId': (basestring, False),
         'VolumeSize': (integer, False),
+        'VolumeType': (basestring, False),
     }
 
 
 class BlockDeviceMapping(AWSProperty):
+    # http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-as-launchconfig-blockdev-mapping.html
     props = {
         'DeviceName': (basestring, True),
         'Ebs': (EBSBlockDevice, False),
+        'NoDevice': (boolean, False),
         'VirtualName': (basestring, False),
     }

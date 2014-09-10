@@ -4,6 +4,7 @@
 # See LICENSE file for full license.
 
 from . import AWSObject, AWSProperty, Tags
+from .validators import positive_integer
 try:
     from awacs.aws import Policy
     policytypes = (dict, Policy)
@@ -19,10 +20,78 @@ BucketOwnerRead = "BucketOwnerRead"
 BucketOwnerFullControl = "BucketOwnerFullControl"
 
 
+class CorsRules(AWSProperty):
+    props = {
+        'AllowedHeaders': ([basestring], False),
+        'AllowedMethods': ([basestring], True),
+        'AllowedOrigins': ([basestring], True),
+        'ExposedHeaders': ([basestring], False),
+        'Id': (basestring, False),
+        'MaxAge': (positive_integer, False),
+    }
+
+
+class CorsConfiguration(AWSProperty):
+    props = {
+        'CorsRules': ([CorsRules], True),
+    }
+
+
+class VersioningConfiguration(AWSProperty):
+    props = {
+        'Status': (basestring, False),
+    }
+
+
 class WebsiteConfiguration(AWSProperty):
     props = {
         'IndexDocument': (basestring, False),
         'ErrorDocument': (basestring, False),
+    }
+
+
+class LifecycleRuleTransition(AWSProperty):
+    props = {
+        'StorageClass': (basestring, True),
+        'TransitionDate': (basestring, False),
+        'TransitionInDays': (positive_integer, False),
+    }
+
+
+class LifecycleRule(AWSProperty):
+    props = {
+        'ExpirationDate': (basestring, False),
+        'ExpirationInDays': (positive_integer, False),
+        'Id': (basestring, False),
+        'Prefix': (basestring, False),
+        'Status': (basestring, True),
+        'Transition': (LifecycleRuleTransition, False),
+    }
+
+
+class LifecycleConfiguration(AWSProperty):
+    props = {
+        'Rules': ([LifecycleRule], True),
+    }
+
+
+class LoggingConfiguration(AWSProperty):
+    props = {
+        'DestinationBucketName': (basestring, False),
+        'LogFilePrefix': (basestring, False),
+    }
+
+
+class TopicConfiguration(AWSProperty):
+    props = {
+        'Event': (basestring, True),
+        'Topic': (basestring, True),
+    }
+
+
+class NotificationConfiguration(AWSProperty):
+    props = {
+        'TopicConfigurations': ([TopicConfiguration], True),
     }
 
 
@@ -32,8 +101,13 @@ class Bucket(AWSObject):
     props = {
         'AccessControl': (basestring, False),
         'BucketName': (basestring, False),
+        'CorsConfiguration': (CorsConfiguration, False),
+        'LifecycleConfiguration': (LifecycleConfiguration, False),
+        'LoggingConfiguration': (LoggingConfiguration, False),
+        'NotificationConfiguration': (NotificationConfiguration, False),
         'Tags': (Tags, False),
-        'WebsiteConfiguration': (WebsiteConfiguration, False)
+        'WebsiteConfiguration': (WebsiteConfiguration, False),
+        'VersioningConfiguration': (VersioningConfiguration, False)
     }
 
     access_control_types = [

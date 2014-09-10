@@ -63,6 +63,7 @@ class EIPAssociation(AWSObject):
 class EBSBlockDevice(AWSProperty):
     props = {
         'DeleteOnTermination': (boolean, False),
+        'Encrypted': (boolean, False),
         'Iops': (int, False),  # Conditional
         'SnapshotId': (basestring, False),  # Conditional
         'VolumeSize': (integer, False),  # Conditional
@@ -98,7 +99,7 @@ class NetworkInterfaceProperty(AWSProperty):
         'AssociatePublicIpAddress': (boolean, False),
         'DeleteOnTermination': (boolean, False),
         'Description': (basestring, False),
-        'DeviceIndex': (basestring, True),
+        'DeviceIndex': (integer, True),
         'GroupSet': ([basestring, Ref], False),
         'NetworkInterfaceId': (basestring, False),
         'PrivateIpAddress': (basestring, False),
@@ -118,6 +119,7 @@ class Instance(AWSObject):
         'EbsOptimized': (boolean, False),
         'IamInstanceProfile': (basestring, False),
         'ImageId': (basestring, True),
+        'InstanceInitiatedShutdownBehavior': (basestring, False),
         'InstanceType': (basestring, False),
         'KernelId': (basestring, False),
         'KeyName': (basestring, False),
@@ -203,7 +205,7 @@ class NetworkInterfaceAttachment(AWSObject):
 
     props = {
         'DeleteOnTermination': (boolean, False),
-        'DeviceIndex': (basestring, True),
+        'DeviceIndex': (integer, True),
         'InstanceId': (basestring, True),
         'NetworkInterfaceId': (basestring, True),
     }
@@ -218,6 +220,7 @@ class Route(AWSObject):
         'InstanceId': (basestring, False),
         'NetworkInterfaceId': (basestring, False),
         'RouteTableId': (basestring, True),
+        'VpcPeeringConnectionId': (basestring, False),
     }
 
 
@@ -276,6 +279,7 @@ class SecurityGroupRule(AWSProperty):
         'SourceSecurityGroupName': (basestring, False),
         'SourceSecurityGroupOwnerId': (basestring, False),
         'ToPort': (network_port, True),
+        'DestinationSecurityGroupId': (basestring, False),
     }
 
 
@@ -325,6 +329,7 @@ class Volume(AWSObject):
 
     props = {
         'AvailabilityZone': (basestring, True),
+        'Encrypted': (boolean, False),
         'Iops': (int, False),
         'Size': (basestring, False),
         'SnapshotId': (basestring, False),
@@ -408,6 +413,16 @@ class VPNGatewayRoutePropagation(AWSObject):
     type = "AWS::EC2::VPNGatewayRoutePropagation"
 
     props = {
-        'RouteTableIds': ([basestring], False),
+        'RouteTableIds': ([basestring, Ref], False),
         'VpnGatewayId': (basestring, True),
+    }
+
+
+class VPCPeeringConnection(AWSObject):
+    type = "AWS::EC2::VPCPeeringConnection"
+
+    props = {
+        'PeerVpcId': (basestring, True),
+        'VpcId': (basestring, True),
+        'Tags': (list, False),
     }

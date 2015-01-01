@@ -32,6 +32,15 @@ class WaitConditionHandle(AWSObject):
 
     props = {}
 
+class Metadata(AWSHelperFn):
+    def __init__(self, *args):
+        self.data = args
+
+    def JSONrepr(self):
+        t = []
+        for i in self.data:
+            t += i.JSONrepr().items();
+        return dict(t)
 
 class InitFileContext(AWSHelperFn):
     def __init__(self, data):
@@ -39,7 +48,6 @@ class InitFileContext(AWSHelperFn):
 
     def JSONrepr(self):
         return self.data
-
 
 class InitFile(AWSProperty):
     props = {
@@ -52,7 +60,6 @@ class InitFile(AWSProperty):
         'authentication': (basestring, False),
         'context': (InitFileContext, False)
     }
-
 
 class InitFiles(AWSHelperFn):
     def __init__(self, data):
@@ -94,6 +101,9 @@ class InitServices(AWSHelperFn):
     def JSONrepr(self):
         return self.data
 
+class Authentication(AWSHelperFn):
+    def __init__(self, data):
+        self.data = {"AWS::CloudFormation::Authentication": data}
 
 class InitConfig(AWSProperty):
     props = {
@@ -105,7 +115,6 @@ class InitConfig(AWSProperty):
         'commands': (dict, False),
         'services': (dict, False)
     }
-
 
 def validate_authentication_type(auth_type):
     valid_types = ['S3', 'basic']
@@ -152,10 +161,10 @@ class Init(AWSHelperFn):
     def validate(self, data):
         if 'config' not in data:
             raise ValueError('config property is required')
-        if not isinstance(data['config'], InitConfig):
-            raise ValueError(
-                'config property must be of type cloudformation.InitConfig'
-            )
+#        if not isinstance(data['config'], InitConfig):
+#            raise ValueError(
+#                'config property must be of type autoscaling.InitConfig'
+#            )
 
     def JSONrepr(self):
         return self.data
